@@ -1,6 +1,6 @@
 {
   "name": "youtube-live-chat",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A library for get YouTube live chats",
   "main": "./src/index",
   "dependencies": {
