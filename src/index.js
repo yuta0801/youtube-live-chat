@@ -16,7 +16,7 @@ class YouTube extends EventEmitter {
 			} else if (res.statusCode != 200) {
 				this.emit('error', json);
 			} else if (!json.items[0]) {
-				this.emit('error', 'Nothing live');
+				this.emit('error', 'Can not find live');
 			} else {
 				this.liveId = json.items[0].id.videoId;
 				this.getChatId();
@@ -31,7 +31,7 @@ class YouTube extends EventEmitter {
 			} else if (res.statusCode != 200) {
 				this.emit('error', json);
 			} else if (!json.items.length) {
-				this.emit('error', 'Nothing live chat');
+				this.emit('error', 'Can not find chat');
 			} else {
 				this.chatId = json.items[0].liveStreamingDetails.activeLiveChatId;
 				this.emit('ready', null);
