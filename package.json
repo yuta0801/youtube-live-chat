@@ -2,7 +2,7 @@
   "name": "youtube-live-chat",
   "version": "0.0.1",
   "description": "A library for get YouTube live chats",
-  "main": "main.js",
+  "main": "./src/index",
   "dependencies": {
     "events": "^1.1.1",
     "request": "^2.81.0"
