@@ -11,8 +11,10 @@ class YouTube extends EventEmitter {
 
 	getLive() {
 		get({url: `https://www.googleapis.com/youtube/v3/search?eventType=live&part=id&channelId=${this.id}&type=video&key=${this.key}`, json: true}, (err, res, json) => {
-			if (err || res.statusCode != 200){
+			if (err) {
 				this.emit('error', err);
+			} else if (res.statusCode != 200) {
+				this.emit('error', json);
 			} else if (!json.items[0]) {
 				this.emit('error', 'Nothing live');
 			} else {
@@ -24,8 +26,10 @@ class YouTube extends EventEmitter {
 
 	getChatId() {
 		get({url: `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${this.liveId}&key=${this.key}`, json: true}, (err, res, json) => {
-			if (err || res.statusCode != 200) {
+			if (err) {
 				this.emit('error', err);
+			} else if (res.statusCode != 200) {
+				this.emit('error', json);
 			} else if (!json.items.length) {
 				this.emit('error', 'Nothing live chat');
 			} else {
@@ -37,8 +41,10 @@ class YouTube extends EventEmitter {
 
 	getChat() {
 		get({url: `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${this.chatId}&part=authorDetails,snippet&hl=ja&maxResults=2000&key=${this.key}`, json: true}, (err, res, json) => {
-			if (err || res.statusCode != 200) {
+			if (err) {
 				this.emit('error', err);
+			} else if (res.statusCode != 200) {
+				this.emit('error', json);
 			} else {
 				this.emit('json', json);
 			}
