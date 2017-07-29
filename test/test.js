@@ -12,5 +12,5 @@ yt.on('chat', json => {
 });
 
 yt.on('error', err => {
-	console.log('err', err);
+	console.log(err);
 });
