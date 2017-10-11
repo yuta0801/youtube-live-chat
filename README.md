@@ -12,17 +12,17 @@ const YouTube = require('youtube-live-chat');
 const yt = new YouTube('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE');
 
 yt.on('ready', () => {
-	console.log('ready!');
-	yt.listen(1000);
-});
+  console.log('ready!')
+  yt.listen(1000)
+})
 
-yt.on('chat', json => {
-	console.log(json.snippet.displayMessage);
-});
+yt.on('chat', data => {
+  console.log(data.snippet.displayMessage)
+})
 
-yt.on('error', err => {
-	console.log(err);
-});
+yt.on('error', error => {
+  console.error(error)
+})
 ```
 
 ## Requirement
@@ -35,8 +35,6 @@ yt.on('error', err => {
 ```
 $ npm install --seve youtube-live-chat
 ```
-
-
 
 ## License
 
