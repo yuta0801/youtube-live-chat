@@ -1,15 +1,15 @@
 {
   "name": "youtube-live-chat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A library for get YouTube live chats",
-  "main": "./src/index",
+  "main": "index.js",
   "dependencies": {
     "events": "^1.1.1",
     "request": "^2.81.0"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
