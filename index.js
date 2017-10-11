@@ -67,6 +67,21 @@ class YouTube extends EventEmitter {
     })
   }
 
+  request(url, callback) {
+    request({
+      url: url,
+      method: 'GET',
+      json: true,
+    }, (error, response, data) => {
+      if (error)
+        this.emit('error', error)
+      else if (response.statusCode !== 200)
+        this.emit('error', data)
+      else
+        callback(data)
+    })
+  }
+
   /**
    * Get chat messages at regular intervals.
    * @param  {[type]} delay Interval to get chat messages.
@@ -74,7 +89,7 @@ class YouTube extends EventEmitter {
    */
   listen(delay) {
     let lastRead = 0, time = 0
-    setInterval(() => {
+    this.interval = setInterval(() => {
       const data = this.getChat()
       for (const item of data.items) {
         time = new Date(item.snippet.publishedAt).getTime()
@@ -92,19 +107,11 @@ class YouTube extends EventEmitter {
     }, delay)
   }
 
-  request(url, callback) {
-    request({
-      url: url,
-      method: 'GET',
-      json: true,
-    }, (error, response, data) => {
-      if (error)
-        this.emit('error', error)
-      else if (response.statusCode !== 200)
-        this.emit('error', data)
-      else
-        callback(data)
-    })
+  /**
+   * Stop getting chat messages at regular intervals.
+   */
+  stop() {
+    clearInterval(this.interval)
   }
 }
 
