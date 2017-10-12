@@ -1,4 +1,4 @@
-const YouTube = require('index.js')
+const YouTube = require('./index.js')
 
 const yt = new YouTube('channelID', 'APIKEY')
 
