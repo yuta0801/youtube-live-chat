@@ -7,8 +7,8 @@ const {EventEmitter} = require('events')
  */
 class YouTube extends EventEmitter {
   /**
-   * @param  {string} ChannelID ID of the channel to acquire with
-   * @param  {string} APIKey you'r API key
+   * @param {string} ChannelID ID of the channel to acquire with
+   * @param {string} APIKey You'r API key
    */
   constructor(channelId, apiKey) {
     super()
@@ -51,8 +51,8 @@ class YouTube extends EventEmitter {
   }
 
   /**
-   * Get chat messages.
-   * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource|docs}.
+   * Gets live chat messages.
+   * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list#response|docs}
    * @return {object}
    */
   getChat() {
@@ -83,8 +83,8 @@ class YouTube extends EventEmitter {
   }
 
   /**
-   * Get chat messages at regular intervals.
-   * @param  {[type]} delay Interval to get chat messages.
+   * Gets live chat messages at regular intervals.
+   * @param {number} delay Interval to get live chat messages
    * @fires YouTube#message
    */
   listen(delay) {
@@ -96,8 +96,8 @@ class YouTube extends EventEmitter {
         if (lastRead < time) {
           lastRead = time
           /**
-          * Message event.
-          * See
+          * Emitted whenever a new message is recepted.
+          * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource|docs}
           * @event YouTube#message
           * @type {object}
           */
@@ -108,7 +108,7 @@ class YouTube extends EventEmitter {
   }
 
   /**
-   * Stop getting chat messages at regular intervals.
+   * Stops getting live chat messages at regular intervals.
    */
   stop() {
     clearInterval(this.interval)
