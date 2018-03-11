@@ -33,7 +33,7 @@ yt.on('error', error => {
 ## Install
 
 ```
-$ npm install --seve youtube-live-chat
+$ npm install --save youtube-live-chat
 ```
 
 ## License
