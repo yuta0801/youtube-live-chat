@@ -91,7 +91,7 @@ class YouTube extends EventEmitter {
     let lastRead = 0, time = 0
     this.interval = setInterval(() => {
       const data = this.getChat()
-      for (const item of data.items) {
+      for (const item of data.items || []) {
         time = new Date(item.snippet.publishedAt).getTime()
         if (lastRead < time) {
           lastRead = time
