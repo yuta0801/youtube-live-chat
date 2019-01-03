@@ -63,7 +63,7 @@ class YouTube extends EventEmitter {
       '&maxResults=2000'+
       `&key=${this.key}`
     this.request(url, data => {
-      return data
+      this.emit('json', data)
     })
   }
 
@@ -89,9 +89,9 @@ class YouTube extends EventEmitter {
    */
   listen(delay) {
     let lastRead = 0, time = 0
-    this.interval = setInterval(() => {
-      const data = this.getChat()
-      for (const item of data.items || []) {
+    this.interval = setInterval(() => this.getChat(), delay)
+    this.on('json', data => {
+      for (const item of data.items) {
         time = new Date(item.snippet.publishedAt).getTime()
         if (lastRead < time) {
           lastRead = time
@@ -104,7 +104,7 @@ class YouTube extends EventEmitter {
           this.emit('message', item)
         }
       }
-    }, delay)
+    })
   }
 
   /**
