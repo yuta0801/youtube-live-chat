@@ -16,7 +16,7 @@ yt.on('ready', () => {
   yt.listen(1000)
 })
 
-yt.on('chat', data => {
+yt.on('message', data => {
   console.log(data.snippet.displayMessage)
 })
 
