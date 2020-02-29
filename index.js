@@ -81,15 +81,10 @@ class YouTube extends EventEmitter {
     }
   }
 
-  /**
-   * Gets live chat messages at regular intervals.
-   * @param {number} delay Interval to get live chat messages
-   * @fires YouTube#message
-   */
-  listen(delay) {
-    let lastRead = 0,
-      time = 0
-    this.interval = setInterval(() => this.getChats(), delay)
+  handler() {
+    this.handled = true
+    let lastRead = 0
+    let time = 0
     this.on('json', data => {
       for (const item of data.items) {
         time = new Date(item.snippet.publishedAt).getTime()
@@ -108,10 +103,30 @@ class YouTube extends EventEmitter {
   }
 
   /**
+   * Gets live chat messages at regular intervals.
+   * @param {number} [delay] Interval to get live chat messages. Default is 1000ms.
+   * @fires YouTube#message
+   */
+  listen(delay) {
+    if (!this.handled) this.handler()
+    if (delay == null) delay = 1000
+    this.delay = delay
+    this.interval = setInterval(() => this.getChats(), delay)
+  }
+
+  /**
    * Stops getting live chat messages at regular intervals.
    */
   stop() {
     clearInterval(this.interval)
+  }
+
+  /**
+   * Restarts getting live chat messages at regular intervals.
+   * @param {number} [delay] Interval to get live chat messages. Default is last interval.
+   */
+  restart(delay) {
+    this.listen(delay != null ? delay : this.delay)
   }
 }
 
