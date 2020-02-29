@@ -1,3 +1,4 @@
+const qs = require('querystring')
 const fetch = require('node-fetch')
 const { EventEmitter } = require('events')
 
@@ -18,14 +19,13 @@ class YouTube extends EventEmitter {
   }
 
   async getLive() {
-    const url =
-      'https://www.googleapis.com/youtube/v3/search' +
-      '?eventType=live' +
-      '&part=id' +
-      `&channelId=${this.id}` +
-      '&type=video' +
-      `&key=${this.key}`
-    const data = await this.request(url)
+    const data = await this.request('search', {
+      eventType: 'live',
+      part: 'id',
+      channelId: this.id,
+      type: 'video',
+      key: this.key,
+    })
     if (!data || !data.items.length) this.emit('error', `Can not find live for channel ${this.id}`)
     else {
       this.liveIds = []
@@ -40,12 +40,11 @@ class YouTube extends EventEmitter {
     if (!this.liveIds) return this.emit('error', 'Live ids are not valid.')
     this.chatIds = []
     for (let id in this.liveIds) {
-      const url =
-        'https://www.googleapis.com/youtube/v3/videos' +
-        '?part=liveStreamingDetails' +
-        `&id=${this.liveIds[id]}` +
-        `&key=${this.key}`
-      const data = await this.request(url)
+      const data = await this.request('videos', {
+        part: 'liveStreamingDetails',
+        id: this.liveIds[id],
+        key: this.key,
+      })
       if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${this.liveIds[id]}`)
       else {
         this.chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
@@ -62,20 +61,21 @@ class YouTube extends EventEmitter {
   async getChats() {
     if (!this.chatIds) return this.emit('error', 'Chat id is invalid.')
     for (let chat in this.chatIds) {
-      const url =
-        'https://www.googleapis.com/youtube/v3/liveChat/messages' +
-        `?liveChatId=${this.chatIds[chat]}` +
-        '&part=id,snippet,authorDetails' +
-        '&maxResults=2000' +
-        `&key=${this.key}`
-      const messages = await this.request(url)
+      const messages = await this.request('liveChat/messages', {
+        liveChatId: this.chatIds[chat],
+        part: 'id,snippet,authorDetails',
+        maxResults: '2000',
+        key: this.key,
+      })
       if (messages) this.emit('json', messages)
     }
   }
 
-  async request(url) {
+  async request(endpoint, params) {
     try {
-      const res = await fetch(url)
+      const url = `https://www.googleapis.com/youtube/v3/` + endpoint
+      const query = params ? '?' + qs.stringify(params) : ''
+      const res = await fetch(url + query)
       const data = await res.json()
       if (!res.ok) throw data
       return data
