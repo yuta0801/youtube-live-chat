@@ -1,4 +1,4 @@
-const request = require('request')
+const fetch = require('node-fetch')
 const { EventEmitter } = require('events')
 
 /**
@@ -74,18 +74,14 @@ class YouTube extends EventEmitter {
 
   request(url) {
     return new Promise(resolve => {
-      request(
-        {
-          url: url,
-          method: 'GET',
-          json: true,
-        },
-        (error, response, data) => {
-          if (error) this.emit('error', error)
-          else if (response.statusCode !== 200) this.emit('error', data)
-          else resolve(data)
-        }
-      )
+      fetch(url)
+        .then(res => {
+          res.json().then(data => {
+            if (!res.ok) this.emit('error', data)
+            else resolve(data)
+          })
+        })
+        .catch(error => this.emit('error', error))
     })
   }
 
