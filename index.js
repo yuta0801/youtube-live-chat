@@ -26,7 +26,7 @@ class YouTube extends EventEmitter {
       '&type=video' +
       `&key=${this.key}`
     const data = await this.request(url)
-    if (!data.items.length) this.emit('error', 'Can not find live.')
+    if (!data || !data.items.length) this.emit('error', `Can not find live for channel ${this.id}`)
     else {
       this.liveIds = []
       for (let item in data.items) {
@@ -46,7 +46,7 @@ class YouTube extends EventEmitter {
         `&id=${this.liveIds[id]}` +
         `&key=${this.key}`
       const data = await this.request(url)
-      if (!data.items.length) this.emit('error', `Can not find chat for stream ${this.liveIds[id]}`)
+      if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${this.liveIds[id]}`)
       else {
         this.chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
       }
@@ -68,21 +68,21 @@ class YouTube extends EventEmitter {
         '&part=id,snippet,authorDetails' +
         '&maxResults=2000' +
         `&key=${this.key}`
-      this.emit('json', await this.request(url))
+      const messages = await this.request(url)
+      if (messages) this.emit('json', messages)
     }
   }
 
-  request(url) {
-    return new Promise(resolve => {
-      fetch(url)
-        .then(res => {
-          res.json().then(data => {
-            if (!res.ok) this.emit('error', data)
-            else resolve(data)
-          })
-        })
-        .catch(error => this.emit('error', error))
-    })
+  async request(url) {
+    try {
+      const res = await fetch(url)
+      const data = await res.json()
+      if (!res.ok) throw data
+      return data
+    } catch (error) {
+      this.emit('error', error)
+      return null
+    }
   }
 
   /**
