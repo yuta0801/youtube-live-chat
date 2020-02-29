@@ -22,11 +22,6 @@ yt.on('error', error => {
 })
 ```
 
-## Requirement
-
-- events ^1.1.1
-- request ^2.81.0
-
 ## Install
 
 ```
