@@ -15,10 +15,9 @@ class YouTube extends EventEmitter {
     super()
     this.id = channelId
     this.key = apiKey
-    this.getLive()
   }
 
-  async getLive() {
+  async getLives() {
     const data = await this.request('search', {
       eventType: 'live',
       part: 'id',
@@ -27,14 +26,11 @@ class YouTube extends EventEmitter {
       key: this.key,
     })
     if (!data || !data.items.length) this.emit('error', `Can not find live for channel ${this.id}`)
-    else {
-      const liveIds = data.items.map(item => item.id.videoId)
-      this.getChatIds(liveIds)
-    }
+    else return data.items.map(item => item.id.videoId)
   }
 
-  async getChatIds(liveIds) {
-    this.chatIds = []
+  async getChats(liveIds) {
+    const chatIds = []
     for (const liveId of liveIds) {
       const data = await this.request('videos', {
         part: 'liveStreamingDetails',
@@ -42,11 +38,9 @@ class YouTube extends EventEmitter {
         key: this.key,
       })
       if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${liveId}`)
-      else {
-        this.chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
-      }
+      else chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
     }
-    if (this.chatIds.length) this.emit('ready')
+    return chatIds
   }
 
   /**
@@ -54,9 +48,8 @@ class YouTube extends EventEmitter {
    * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list#response|docs}
    * @return {object}
    */
-  async getChats() {
-    if (!this.chatIds) return this.emit('error', 'Chat id is invalid.')
-    for (const chatId of this.chatIds) {
+  async getMessages(chatIds) {
+    for (const chatId of chatIds) {
       const messages = await this.request('liveChat/messages', {
         liveChatId: chatId,
         part: 'id,snippet,authorDetails',
@@ -69,7 +62,7 @@ class YouTube extends EventEmitter {
 
   async request(endpoint, params) {
     try {
-      const url = `https://www.googleapis.com/youtube/v3/` + endpoint
+      const url = 'https://www.googleapis.com/youtube/v3/' + endpoint
       const query = params ? '?' + qs.stringify(params) : ''
       const res = await fetch(url + query)
       const data = await res.json()
@@ -107,11 +100,18 @@ class YouTube extends EventEmitter {
    * @param {number} [delay] Interval to get live chat messages. Default is 1000ms.
    * @fires YouTube#message
    */
-  listen(delay) {
+  async listen(delay) {
     if (!this.handled) this.handler()
-    if (delay == null) delay = 1000
+    if (this.interval) this.stop()
+
+    if (typeof delay !== 'number') delay = 1000
     this.delay = delay
-    this.interval = setInterval(() => this.getChats(), delay)
+
+    const liveIds = await this.getLives()
+    const chatIds = await this.getChats(liveIds)
+
+    this.chatIds = chatIds
+    this.interval = setInterval(() => this.getMessages(chatIds), delay)
   }
 
   /**
@@ -126,7 +126,8 @@ class YouTube extends EventEmitter {
    * @param {number} [delay] Interval to get live chat messages. Default is last interval.
    */
   restart(delay) {
-    this.listen(delay != null ? delay : this.delay)
+    if (typeof delay !== 'number') delay = this.delay
+    this.interval = setInterval(() => this.getMessages(this.chatIds), delay)
   }
 }
 
