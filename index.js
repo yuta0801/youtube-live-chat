@@ -28,24 +28,20 @@ class YouTube extends EventEmitter {
     })
     if (!data || !data.items.length) this.emit('error', `Can not find live for channel ${this.id}`)
     else {
-      this.liveIds = []
-      for (let item in data.items) {
-        this.liveIds.push(data.items[item].id.videoId)
-      }
-      this.getChatIds()
+      const liveIds = data.items.map(item => item.id.videoId)
+      this.getChatIds(liveIds)
     }
   }
 
-  async getChatIds() {
-    if (!this.liveIds) return this.emit('error', 'Live ids are not valid.')
+  async getChatIds(liveIds) {
     this.chatIds = []
-    for (let id in this.liveIds) {
+    for (const liveId of liveIds) {
       const data = await this.request('videos', {
         part: 'liveStreamingDetails',
-        id: this.liveIds[id],
+        id: liveId,
         key: this.key,
       })
-      if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${this.liveIds[id]}`)
+      if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${liveId}`)
       else {
         this.chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
       }
@@ -60,9 +56,9 @@ class YouTube extends EventEmitter {
    */
   async getChats() {
     if (!this.chatIds) return this.emit('error', 'Chat id is invalid.')
-    for (let chat in this.chatIds) {
+    for (const chatId of this.chatIds) {
       const messages = await this.request('liveChat/messages', {
-        liveChatId: this.chatIds[chat],
+        liveChatId: chatId,
         part: 'id,snippet,authorDetails',
         maxResults: '2000',
         key: this.key,
