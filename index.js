@@ -98,20 +98,22 @@ class YouTube extends EventEmitter {
   /**
    * Gets live chat messages at regular intervals.
    * @param {number} [delay] Interval to get live chat messages. Default is 1000ms.
+   * @param {function} [filter] Filter to select live stream. Default is _all lives_.
    * @fires YouTube#message
    */
-  async listen(delay) {
+  async listen(delay = 1000, filter = c => c) {
     if (!this.handled) this.handler()
     if (this.interval) this.stop()
-
-    if (typeof delay !== 'number') delay = 1000
-    this.delay = delay
 
     const liveIds = await this.getLives()
     const chatIds = await this.getChats(liveIds)
 
+    // hold data for restart
+    this.delay = delay
+    this.filter = filter
     this.chatIds = chatIds
-    this.interval = setInterval(() => this.getMessages(chatIds), delay)
+
+    this.interval = setInterval(() => this.getMessages(filter(chatIds)), delay)
   }
 
   /**
@@ -123,11 +125,12 @@ class YouTube extends EventEmitter {
 
   /**
    * Restarts getting live chat messages at regular intervals.
-   * @param {number} [delay] Interval to get live chat messages. Default is last interval.
+   * @param {number} [delay] Interval to get live chat messages. Default is _interval last passed listen method_.
+   * @param {number} [filter] Filter to select live. Default is _filter last passed listen method_.
    */
-  restart(delay) {
-    if (typeof delay !== 'number') delay = this.delay
-    this.interval = setInterval(() => this.getMessages(this.chatIds), delay)
+  restart(delay = this.delay, filter = this.filter) {
+    const chatIds = filter(this.chatIds)
+    this.interval = setInterval(() => this.getMessages(chatIds), delay)
   }
 }
 
