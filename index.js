@@ -100,13 +100,11 @@ class LiveChat extends EventEmitter {
    */
   handler() {
     this.handled = true
-    let lastRead = 0
-    let time = 0
     this.on('json', data => {
       for (const item of data.items) {
-        time = new Date(item.snippet.publishedAt).getTime()
-        if (lastRead < time) {
-          lastRead = time
+        const time = new Date(item.snippet.publishedAt).getTime()
+        if (this.lastRead < time) {
+          this.lastRead = time
           /**
            * Emitted whenever a new message is recepted.
            * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource}
@@ -123,7 +121,7 @@ class LiveChat extends EventEmitter {
    * Listening options
    * @typedef {Object} ListenOptions
    * @property {number} [interval] Interval to get live chat messages. Default is 1000ms.
-   * @property {function} [filter] Filter to select live stream. Default is _all lives_.
+   * @property {function} [liveFilter] Filter to select live stream. Default is _all lives_.
    */
 
   /**
@@ -135,10 +133,13 @@ class LiveChat extends EventEmitter {
     options = Object.assign(
       {
         interval: 1000,
-        filter: c => c,
+        liveFilter: c => c,
+        ignorePastMessages: true,
       },
       options,
     )
+
+    if (options.ignorePastMessages) this.lastRead = Date.now()
 
     if (!this.handled) this.handler()
     if (this.interval) this.stop()
@@ -151,7 +152,7 @@ class LiveChat extends EventEmitter {
     this.chatIds = chatIds
 
     this.interval = setInterval(
-      () => this.getMessages(options.filter(chatIds)),
+      () => this.getMessages(options.liveFilter(chatIds)),
       options.interval,
     )
   }
@@ -168,8 +169,10 @@ class LiveChat extends EventEmitter {
    * @param {ListenOptions} [options] Listening options. Default is options last passed to listen method_.
    */
   restart(options = this.options) {
+    if (this.options.ignorePastMessages) this.lastRead = Date.now()
+
     this.interval = setInterval(
-      () => this.getMessages(options.filter(this.chatIds)),
+      () => this.getMessages(options.liveFilter(this.chatIds)),
       options.interval,
     )
   }

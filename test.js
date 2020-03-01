@@ -25,6 +25,6 @@ setTimeout(() => {
     setTimeout(() => {
       chat.stop()
       console.log('--- stopped listening ---')
-    }, 3000)
+    }, 5000)
   }, 3000)
 }, 5000)
