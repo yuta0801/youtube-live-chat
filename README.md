@@ -11,7 +11,7 @@ const LiveChat = require('youtube-live-chat')
 
 const chat = new LiveChat('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE')
 
-chat.listen(1000)
+chat.listen()
 
 chat.on('message', data => {
   console.log(data.snippet.displayMessage)

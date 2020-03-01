@@ -2,7 +2,7 @@ const LiveChat = require('./index.js')
 
 const chat = new LiveChat('CHANNEL_ID', 'APIKEY')
 
-chat.listen(1000)
+chat.listen()
 
 chat.on('message', data => {
   console.log(data.snippet.displayMessage)

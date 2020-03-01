@@ -120,12 +120,26 @@ class LiveChat extends EventEmitter {
   }
 
   /**
+   * Listening options
+   * @typedef {Object} ListenOptions
+   * @property {number} [interval] Interval to get live chat messages. Default is 1000ms.
+   * @property {function} [filter] Filter to select live stream. Default is _all lives_.
+   */
+
+  /**
    * Gets live chat messages at regular intervals.
-   * @param {number} [delay] Interval to get live chat messages. Default is 1000ms.
-   * @param {function} [filter] Filter to select live stream. Default is _all lives_.
+   * @param {ListenOptions} [options] Listening options
    * @fires LiveChat#message
    */
-  async listen(delay = 1000, filter = c => c) {
+  async listen(options) {
+    options = Object.assign(
+      {
+        interval: 1000,
+        filter: c => c,
+      },
+      options,
+    )
+
     if (!this.handled) this.handler()
     if (this.interval) this.stop()
 
@@ -133,28 +147,31 @@ class LiveChat extends EventEmitter {
     const chatIds = await this.getChatIds(liveIds)
 
     // hold data for restart
-    this.delay = delay
-    this.filter = filter
+    this.options = options
     this.chatIds = chatIds
 
-    this.interval = setInterval(() => this.getMessages(filter(chatIds)), delay)
+    this.interval = setInterval(
+      () => this.getMessages(options.filter(chatIds)),
+      options.interval,
+    )
   }
 
   /**
-   * Stops getting live chat messages at regular intervals.
+   * Stops getting live chat messages
    */
   stop() {
     clearInterval(this.interval)
   }
 
   /**
-   * Restarts getting live chat messages at regular intervals.
-   * @param {number} [delay] Interval to get live chat messages. Default is _interval last passed listen method_.
-   * @param {number} [filter] Filter to select live. Default is _filter last passed listen method_.
+   * Restarts getting live chat messages
+   * @param {ListenOptions} [options] Listening options. Default is options last passed to listen method_.
    */
-  restart(delay = this.delay, filter = this.filter) {
-    const chatIds = filter(this.chatIds)
-    this.interval = setInterval(() => this.getMessages(chatIds), delay)
+  restart(options = this.options) {
+    this.interval = setInterval(
+      () => this.getMessages(options.filter(this.chatIds)),
+      options.interval,
+    )
   }
 }
 
