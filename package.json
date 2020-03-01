@@ -12,6 +12,9 @@
   "scripts": {
     "test": "node test.js"
   },
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yuta0801/youtube-live-chat.git"
