@@ -7,23 +7,23 @@ A library for get YouTube live chats
 ## Demo
 
 ```js
-const YouTube = require('youtube-live-chat')
+const LiveChat = require('youtube-live-chat')
 
-const yt = new YouTube('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE')
+const chat = new LiveChat('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE')
 
-yt.listen(1000)
+chat.listen(1000)
 
-yt.on('message', data => {
+chat.on('message', data => {
   console.log(data.snippet.displayMessage)
 })
 
 // API request error
-yt.on('error', error => {
+chat.on('error', error => {
   console.error(error)
 })
 
 // some useful messages for debugging
-yt.on('warn', warn => {
+chat.on('warn', warn => {
   console.warn(warn)
 })
 ```

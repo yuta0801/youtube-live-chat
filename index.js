@@ -3,10 +3,9 @@ const fetch = require('node-fetch')
 const { EventEmitter } = require('events')
 
 /**
- * The main hub for acquire live chat with the YouTube Date API.
  * @extends {EventEmitter}
  */
-class YouTube extends EventEmitter {
+class LiveChat extends EventEmitter {
   /**
    * @param {string} ChannelID ID of the channel to acquire with
    * @param {string} APIKey You'r API key
@@ -138,4 +137,4 @@ class YouTube extends EventEmitter {
   }
 }
 
-module.exports = YouTube
+module.exports = LiveChat
