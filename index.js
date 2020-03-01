@@ -16,6 +16,10 @@ class LiveChat extends EventEmitter {
     this.key = apiKey
   }
 
+  /**
+   * @returns {Promise<string[]>}
+   * @private
+   */
   async getLives() {
     const data = await this.request('search', {
       eventType: 'live',
@@ -29,6 +33,11 @@ class LiveChat extends EventEmitter {
     return data ? data.items.map(item => item.id.videoId) : []
   }
 
+  /**
+   * @param {string[]} liveIds
+   * @returns {Promise<string[]>}
+   * @private
+   */
   async getChats(liveIds) {
     const chatIds = []
     for (const liveId of liveIds) {
@@ -46,9 +55,8 @@ class LiveChat extends EventEmitter {
   }
 
   /**
-   * Gets live chat messages.
-   * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list#response|docs}
-   * @return {object}
+   * @param {string[]} chatIds
+   * @private
    */
   async getMessages(chatIds) {
     for (const chatId of chatIds) {
@@ -63,6 +71,11 @@ class LiveChat extends EventEmitter {
     }
   }
 
+  /**
+   * @param {string} endpoint
+   * @param {Object.<string, string>} [params]
+   * @private
+   */
   async request(endpoint, params) {
     try {
       const url = 'https://www.googleapis.com/youtube/v3/' + endpoint
@@ -77,6 +90,9 @@ class LiveChat extends EventEmitter {
     }
   }
 
+  /**
+   * @private
+   */
   handler() {
     this.handled = true
     let lastRead = 0
@@ -88,8 +104,8 @@ class LiveChat extends EventEmitter {
           lastRead = time
           /**
            * Emitted whenever a new message is recepted.
-           * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource|docs}
-           * @event YouTube#message
+           * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource}
+           * @event LiveChat#message
            * @type {object}
            */
           this.emit('message', item)
@@ -102,7 +118,7 @@ class LiveChat extends EventEmitter {
    * Gets live chat messages at regular intervals.
    * @param {number} [delay] Interval to get live chat messages. Default is 1000ms.
    * @param {function} [filter] Filter to select live stream. Default is _all lives_.
-   * @fires YouTube#message
+   * @fires LiveChat#message
    */
   async listen(delay = 1000, filter = c => c) {
     if (!this.handled) this.handler()
