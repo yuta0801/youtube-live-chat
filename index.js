@@ -20,8 +20,8 @@ class LiveChat extends EventEmitter {
    * @returns {Promise<string[]>}
    * @private
    */
-  async getLives() {
-    const data = await this.request('search', {
+  async getLiveIds() {
+    const data = await this.fetch('search', {
       eventType: 'live',
       part: 'id',
       channelId: this.id,
@@ -38,10 +38,10 @@ class LiveChat extends EventEmitter {
    * @returns {Promise<string[]>}
    * @private
    */
-  async getChats(liveIds) {
+  async getChatIds(liveIds) {
     const chatIds = []
     for (const liveId of liveIds) {
-      const data = await this.request('videos', {
+      const data = await this.fetch('videos', {
         part: 'liveStreamingDetails',
         id: liveId,
         key: this.key,
@@ -60,7 +60,7 @@ class LiveChat extends EventEmitter {
    */
   async getMessages(chatIds) {
     for (const chatId of chatIds) {
-      const messages = await this.request('liveChat/messages', {
+      const messages = await this.fetch('liveChat/messages', {
         liveChatId: chatId,
         part: 'id,snippet,authorDetails',
         maxResults: '2000',
@@ -76,7 +76,7 @@ class LiveChat extends EventEmitter {
    * @param {Object.<string, string>} [params]
    * @private
    */
-  async request(endpoint, params) {
+  async fetch(endpoint, params) {
     try {
       const url = 'https://www.googleapis.com/youtube/v3/' + endpoint
       const query = params ? '?' + qs.stringify(params) : ''
@@ -124,8 +124,8 @@ class LiveChat extends EventEmitter {
     if (!this.handled) this.handler()
     if (this.interval) this.stop()
 
-    const liveIds = await this.getLives()
-    const chatIds = await this.getChats(liveIds)
+    const liveIds = await this.getLiveIds()
+    const chatIds = await this.getChatIds(liveIds)
 
     // hold data for restart
     this.delay = delay
