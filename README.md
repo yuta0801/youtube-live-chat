@@ -31,7 +31,8 @@ chat.on('warn', warn => {
 ## Install
 
 ```
-$ npm install --save youtube-live-chat
+$ npm install youtube-live-chat # using npm
+$ yarn add youtube-live-chat # using yarn
 ```
 
 ## License
