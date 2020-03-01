@@ -28,8 +28,10 @@ class LiveChat extends EventEmitter {
       type: 'video',
       key: this.key,
     })
-    if (!data) this.emit('warn', `Failed fetch live stream for channel ${this.id}`)
-    else if (!data.items.length) this.emit('warn', `No live stream found for channel ${this.id}`)
+    if (!data)
+      this.emit('warn', `Failed fetch live stream for channel ${this.id}`)
+    else if (!data.items.length)
+      this.emit('warn', `No live stream found for channel ${this.id}`)
     return data ? data.items.map(item => item.id.videoId) : []
   }
 
@@ -46,8 +48,10 @@ class LiveChat extends EventEmitter {
         id: liveId,
         key: this.key,
       })
-      if (!data) this.emit('warn', `Failed fetch live stream for stream ${liveId}`)
-      if (!data.items.length) this.emit('warn', `No live chat found for stream ${liveId}`)
+      if (!data)
+        this.emit('warn', `Failed fetch live stream for stream ${liveId}`)
+      if (!data.items.length)
+        this.emit('warn', `No live chat found for stream ${liveId}`)
       else chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
     }
     if (!chatIds.length) this.emit('warn', 'No live chat found')
@@ -66,7 +70,8 @@ class LiveChat extends EventEmitter {
         maxResults: '2000',
         key: this.key,
       })
-      if (!messages) this.emit('warn', `Failed fetch live chat messages for ${chatId}`)
+      if (!messages)
+        this.emit('warn', `Failed fetch live chat messages for ${chatId}`)
       else this.emit('json', messages)
     }
   }
