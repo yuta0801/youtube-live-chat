@@ -17,8 +17,14 @@ yt.on('message', data => {
   console.log(data.snippet.displayMessage)
 })
 
+// API request error
 yt.on('error', error => {
   console.error(error)
+})
+
+// some useful messages for debugging
+yt.on('warn', warn => {
+  console.warn(warn)
 })
 ```
 

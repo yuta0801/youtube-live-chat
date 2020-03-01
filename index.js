@@ -25,8 +25,9 @@ class YouTube extends EventEmitter {
       type: 'video',
       key: this.key,
     })
-    if (!data || !data.items.length) this.emit('error', `Can not find live for channel ${this.id}`)
-    else return data.items.map(item => item.id.videoId)
+    if (!data) this.emit('warn', `Failed fetch live stream for channel ${this.id}`)
+    else if (!data.items.length) this.emit('warn', `No live stream found for channel ${this.id}`)
+    return data ? data.items.map(item => item.id.videoId) : []
   }
 
   async getChats(liveIds) {
@@ -37,9 +38,11 @@ class YouTube extends EventEmitter {
         id: liveId,
         key: this.key,
       })
-      if (!data || !data.items.length) this.emit('error', `Can not find chat for stream ${liveId}`)
+      if (!data) this.emit('warn', `Failed fetch live stream for stream ${liveId}`)
+      if (!data.items.length) this.emit('warn', `No live chat found for stream ${liveId}`)
       else chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
     }
+    if (!chatIds.length) this.emit('warn', 'No live chat found')
     return chatIds
   }
 
@@ -56,7 +59,8 @@ class YouTube extends EventEmitter {
         maxResults: '2000',
         key: this.key,
       })
-      if (messages) this.emit('json', messages)
+      if (!messages) this.emit('warn', `Failed fetch live chat messages for ${chatId}`)
+      else this.emit('json', messages)
     }
   }
 

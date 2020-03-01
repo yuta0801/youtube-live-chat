@@ -12,6 +12,10 @@ yt.on('error', error => {
   console.log(error)
 })
 
+yt.on('warn', warn => {
+  console.warn(warn)
+})
+
 setTimeout(() => {
   yt.stop()
   console.log('--- stopped listening ---')
