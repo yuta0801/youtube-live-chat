@@ -1,11 +1,11 @@
-const request = require('request')
-const {EventEmitter} = require('events')
+const qs = require('querystring')
+const fetch = require('node-fetch')
+const { EventEmitter } = require('events')
 
 /**
- * The main hub for acquire live chat with the YouTube Date API.
  * @extends {EventEmitter}
  */
-class YouTube extends EventEmitter {
+class LiveChat extends EventEmitter {
   /**
    * @param {string} ChannelID ID of the channel to acquire with
    * @param {string} APIKey You'r API key
@@ -14,93 +14,103 @@ class YouTube extends EventEmitter {
     super()
     this.id = channelId
     this.key = apiKey
-    this.getLive()
   }
 
-  getLive() {
-    const url = 'https://www.googleapis.com/youtube/v3/search'+
-      '?eventType=live'+
-      '&part=id'+
-      `&channelId=${this.id}`+
-      '&type=video'+
-      `&key=${this.key}`
-    this.request(url, data => {
-      if (!data.items[0])
-        this.emit('error', 'Can not find live.')
-      else {
-        this.liveId = data.items[0].id.videoId
-        this.getChatId()
-      }
+  /**
+   * @returns {Promise<string[]>}
+   * @private
+   */
+  async getLiveIds() {
+    const data = await this.fetch('search', {
+      eventType: 'live',
+      part: 'id',
+      channelId: this.id,
+      type: 'video',
+      key: this.key,
     })
+    if (!data)
+      this.emit('warn', `Failed fetch live stream for channel ${this.id}`)
+    else if (!data.items.length)
+      this.emit('warn', `No live stream found for channel ${this.id}`)
+    return data ? data.items.map(item => item.id.videoId) : []
   }
 
-  getChatId() {
-    if (!this.liveId) return this.emit('error', 'Live id is invalid.')
-    const url = 'https://www.googleapis.com/youtube/v3/videos'+
-      '?part=liveStreamingDetails'+
-      `&id=${this.liveId}`+
-      `&key=${this.key}`
-    this.request(url, data => {
+  /**
+   * @param {string[]} liveIds
+   * @returns {Promise<string[]>}
+   * @private
+   */
+  async getChatIds(liveIds) {
+    const chatIds = []
+    for (const liveId of liveIds) {
+      const data = await this.fetch('videos', {
+        part: 'liveStreamingDetails',
+        id: liveId,
+        key: this.key,
+      })
+      if (!data)
+        this.emit('warn', `Failed fetch live stream for stream ${liveId}`)
       if (!data.items.length)
-        this.emit('error', 'Can not find chat.')
-      else {
-        this.chatId = data.items[0].liveStreamingDetails.activeLiveChatId
-        this.emit('ready')
-      }
-    })
+        this.emit('warn', `No live chat found for stream ${liveId}`)
+      else chatIds.push(data.items[0].liveStreamingDetails.activeLiveChatId)
+    }
+    if (!chatIds.length) this.emit('warn', 'No live chat found')
+    return chatIds
   }
 
   /**
-   * Gets live chat messages.
-   * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list#response|docs}
-   * @return {object}
+   * @param {string[]} chatIds
+   * @private
    */
-  getChat() {
-    if (!this.chatId) return this.emit('error', 'Chat id is invalid.')
-    const url = 'https://www.googleapis.com/youtube/v3/liveChat/messages'+
-      `?liveChatId=${this.chatId}`+
-      '&part=id,snippet,authorDetails'+
-      '&maxResults=2000'+
-      `&key=${this.key}`
-    this.request(url, data => {
-      this.emit('json', data)
-    })
-  }
-
-  request(url, callback) {
-    request({
-      url: url,
-      method: 'GET',
-      json: true,
-    }, (error, response, data) => {
-      if (error)
-        this.emit('error', error)
-      else if (response.statusCode !== 200)
-        this.emit('error', data)
-      else
-        callback(data)
-    })
+  async getMessages(chatIds) {
+    for (const chatId of chatIds) {
+      const messages = await this.fetch('liveChat/messages', {
+        liveChatId: chatId,
+        part: 'id,snippet,authorDetails',
+        maxResults: '2000',
+        key: this.key,
+      })
+      if (!messages)
+        this.emit('warn', `Failed fetch live chat messages for ${chatId}`)
+      else this.emit('json', messages)
+    }
   }
 
   /**
-   * Gets live chat messages at regular intervals.
-   * @param {number} delay Interval to get live chat messages
-   * @fires YouTube#message
+   * @param {string} endpoint
+   * @param {Object.<string, string>} [params]
+   * @private
    */
-  listen(delay) {
-    let lastRead = 0, time = 0
-    this.interval = setInterval(() => this.getChat(), delay)
+  async fetch(endpoint, params) {
+    try {
+      const url = 'https://www.googleapis.com/youtube/v3/' + endpoint
+      const query = params ? '?' + qs.stringify(params) : ''
+      const res = await fetch(url + query)
+      const data = await res.json()
+      if (!res.ok) throw data
+      return data
+    } catch (error) {
+      this.emit('error', error)
+      return null
+    }
+  }
+
+  /**
+   * @private
+   */
+  handler() {
+    this.handled = true
     this.on('json', data => {
       for (const item of data.items) {
-        time = new Date(item.snippet.publishedAt).getTime()
-        if (lastRead < time) {
-          lastRead = time
+        const time = new Date(item.snippet.publishedAt).getTime()
+        if (this.lastRead < time) {
+          this.lastRead = time
           /**
-          * Emitted whenever a new message is recepted.
-          * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource|docs}
-          * @event YouTube#message
-          * @type {object}
-          */
+           * Emitted whenever a new message is recepted.
+           * See {@link https://developers.google.com/youtube/v3/live/docs/liveChatMessages#resource}
+           * @event LiveChat#message
+           * @type {object}
+           */
           this.emit('message', item)
         }
       }
@@ -108,11 +118,64 @@ class YouTube extends EventEmitter {
   }
 
   /**
-   * Stops getting live chat messages at regular intervals.
+   * Listening options
+   * @typedef {Object} ListenOptions
+   * @property {number} [interval] Interval to get live chat messages. Default is 1000ms.
+   * @property {function} [liveFilter] Filter to select live stream. Default is _all lives_.
+   */
+
+  /**
+   * Gets live chat messages at regular intervals.
+   * @param {ListenOptions} [options] Listening options
+   * @fires LiveChat#message
+   */
+  async listen(options) {
+    options = Object.assign(
+      {
+        interval: 1000,
+        liveFilter: c => c,
+        ignorePastMessages: true,
+      },
+      options,
+    )
+
+    if (options.ignorePastMessages) this.lastRead = Date.now()
+
+    if (!this.handled) this.handler()
+    if (this.interval) this.stop()
+
+    const liveIds = await this.getLiveIds()
+    const chatIds = await this.getChatIds(liveIds)
+
+    // hold data for restart
+    this.options = options
+    this.chatIds = chatIds
+
+    this.interval = setInterval(
+      () => this.getMessages(options.liveFilter(chatIds)),
+      options.interval,
+    )
+  }
+
+  /**
+   * Stops getting live chat messages
    */
   stop() {
     clearInterval(this.interval)
   }
+
+  /**
+   * Restarts getting live chat messages
+   * @param {ListenOptions} [options] Listening options. Default is options last passed to listen method_.
+   */
+  restart(options = this.options) {
+    if (this.options.ignorePastMessages) this.lastRead = Date.now()
+
+    this.interval = setInterval(
+      () => this.getMessages(options.liveFilter(this.chatIds)),
+      options.interval,
+    )
+  }
 }
 
-module.exports = YouTube
+module.exports = LiveChat

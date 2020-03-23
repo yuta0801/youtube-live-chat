@@ -2,38 +2,37 @@
 
 [![Build Status](https://travis-ci.org/yuta0801/youtube-live-chat.svg?branch=master)](https://travis-ci.org/yuta0801/youtube-live-chat)
 
-A library for get YouTube live chats
+A library for get YouTube live chat messages
 
 ## Demo
 
 ```js
-const YouTube = require('youtube-live-chat');
+const LiveChat = require('youtube-live-chat')
 
-const yt = new YouTube('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE');
+const chat = new LiveChat('CHANNEL_ID_IS_HERE', 'APIKEY_IS_HERE')
 
-yt.on('ready', () => {
-  console.log('ready!')
-  yt.listen(1000)
-})
+chat.listen()
 
-yt.on('message', data => {
+chat.on('message', data => {
   console.log(data.snippet.displayMessage)
 })
 
-yt.on('error', error => {
+// API request error
+chat.on('error', error => {
   console.error(error)
 })
+
+// some useful messages for debugging
+chat.on('warn', warn => {
+  console.warn(warn)
+})
 ```
-
-## Requirement
-
-- events ^1.1.1
-- request ^2.81.0
 
 ## Install
 
 ```
-$ npm install --save youtube-live-chat
+$ npm install youtube-live-chat # using npm
+$ yarn add youtube-live-chat # using yarn
 ```
 
 ## License

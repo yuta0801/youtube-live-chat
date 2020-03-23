@@ -1,16 +1,30 @@
-const YouTube = require('./index.js')
+const LiveChat = require('./index.js')
 
-const yt = new YouTube('channelID', 'APIKEY')
+const chat = new LiveChat('CHANNEL_ID', 'APIKEY')
 
-yt.on('ready', () => {
-  console.log('ready!')
-  yt.listen(1000)
-})
+chat.listen()
 
-yt.on('message', data => {
+chat.on('message', data => {
   console.log(data.snippet.displayMessage)
 })
 
-yt.on('error', error => {
+chat.on('error', error => {
   console.log(error)
 })
+
+chat.on('warn', warn => {
+  console.warn(warn)
+})
+
+setTimeout(() => {
+  chat.stop()
+  console.log('--- stopped listening ---')
+  setTimeout(() => {
+    chat.restart()
+    console.log('--- restartted listening ---')
+    setTimeout(() => {
+      chat.stop()
+      console.log('--- stopped listening ---')
+    }, 5000)
+  }, 3000)
+}, 5000)
