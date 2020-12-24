@@ -10,18 +10,23 @@ class YouTube extends EventEmitter {
    * @param {string} ChannelID ID of the channel to acquire with
    * @param {string} APIKey You'r API key
    */
-  constructor(channelId, apiKey) {
+  constructor(id, apiKey) {
     super()
-    this.id = channelId
+    this.id = id
     this.key = apiKey
-    this.getLive()
+    if (id.channelId) {
+      this.getLive()
+      return
+    }
+    this.liveId = id.liveId
+    this.getChatId()
   }
 
   getLive() {
     const url = 'https://www.googleapis.com/youtube/v3/search'+
       '?eventType=live'+
       '&part=id'+
-      `&channelId=${this.id}`+
+      `&channelId=${this.id.channelId}`+
       '&type=video'+
       `&key=${this.key}`
     this.request(url, data => {
